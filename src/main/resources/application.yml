@@ -1,0 +1,10 @@
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://zouyanan:postgres@localhost:5432/demo
+    pool:
+      enabled: true
+      initial-size: 5
+      max-size: 10
+logging:
+  level:
+    org.springframework.r2dbc: DEBUG
