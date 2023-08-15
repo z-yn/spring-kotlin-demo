@@ -8,7 +8,7 @@ suspend fun test(id: String): String {
     println("suspend start")
     val user = getUserByIdSuspended(id)
     println("suspend end")
-    return user.name
+    return user.id
 }
 
 abstract class BaseContinuationImpl(public val completion: Continuation<Any?>) : Continuation<Any?> {
@@ -78,5 +78,5 @@ fun testCsp(id: String, continuation: Continuation<Any?>): Any? {
     }
     val userData = res as UserData
     println("suspended end")
-    return userData.name
+    return userData.id
 }

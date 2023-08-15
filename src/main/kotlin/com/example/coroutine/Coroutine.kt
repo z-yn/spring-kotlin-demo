@@ -1,5 +1,6 @@
 package com.example.coroutine
 
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlin.coroutines.Continuation
@@ -7,21 +8,17 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-data class UserData(val name: String)
-data class UserImage(val svg: String)
+data class UserData(val id: String, val name: String)
+data class UserAvatar(val svg: String)
 
-fun getUserById(id: String): UserData {
+fun getUserByName(name: String): UserData {
     Thread.sleep(1000)//模仿网络请求
-    return UserData(id)
+    return UserData(UUID.randomUUID().toString(), name)
 }
 
-fun getUserByIdCsp(id: String, continuation: Continuation<Any?>) {
-
-}
-
-fun getUserAvatar(userName: String): UserImage {
+fun getUserAvatar(userName: String): UserAvatar {
     Thread.sleep(1000)//模仿网络请求
-    return UserImage(userName)
+    return UserAvatar("<svg></svg>")
 }
 
 fun getUserOrders(userName: String): List<Int> {
@@ -29,10 +26,14 @@ fun getUserOrders(userName: String): List<Int> {
     return listOf(1, 2, 3)
 }
 
+fun getUserByIdCsp(id: String, continuation: Continuation<Any?>) {
+
+}
+
 fun linear() {
-    val user = getUserById("111"); //耗时1s
-    val order = getUserOrders(user.name) //耗时1s
-    val userAvatar = getUserAvatar(user.name) //耗时1s
+    val user = getUserByName("111"); //耗时1s
+    val order = getUserOrders(user.id) //耗时1s
+    val userAvatar = getUserAvatar(user.id) //耗时1s
     // 其他业务逻辑 ...
 }
 
@@ -52,9 +53,9 @@ fun <T> callbackStyle(task: () -> T, onSuccess: (T) -> Unit, onFailure: ((Except
 }
 
 fun getUserByIdAsync(id: String, onSuccess: (UserData) -> Unit, onFailure: ((Exception) -> Unit)? = null) =
-    callbackStyle({ getUserById(id) }, onSuccess, onFailure)
+    callbackStyle({ getUserByName(id) }, onSuccess, onFailure)
 
-fun getUserAvatarAsync(id: String, onSuccess: (UserImage) -> Unit, onFailure: ((Exception) -> Unit)? = null) =
+fun getUserAvatarAsync(id: String, onSuccess: (UserAvatar) -> Unit, onFailure: ((Exception) -> Unit)? = null) =
     callbackStyle({ getUserAvatar(id) }, onSuccess, onFailure)
 
 fun getUserOrdersAsync(id: String, onSuccess: (List<Int>) -> Unit, onFailure: ((Exception) -> Unit)? = null) =
@@ -72,8 +73,8 @@ suspend fun <T> suspendedCall(task: () -> T) = suspendCoroutine { continuation -
     }
 }
 
-suspend fun getUserByIdSuspended(id: String): UserData = suspendedCall { getUserById(id) }
-suspend fun getUserAvatarSuspended(id: String): UserImage = suspendedCall { getUserAvatar(id) }
+suspend fun getUserByIdSuspended(id: String): UserData = suspendedCall { getUserByName(id) }
+suspend fun getUserAvatarSuspended(id: String): UserAvatar = suspendedCall { getUserAvatar(id) }
 suspend fun getUserOrdersSuspended(id: String): List<Int> = suspendedCall { getUserOrders(id) }
 
 
