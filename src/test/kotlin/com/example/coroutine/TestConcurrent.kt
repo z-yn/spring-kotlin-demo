@@ -30,9 +30,9 @@ internal class TestConcurrent {
     fun futureTest() {
         data class Result(
             val orders: List<Int>,
-            val avatar: UserImage
+            val avatar: UserAvatar
         )
-        CompletableFuture.supplyAsync { getUserById("111") }
+        CompletableFuture.supplyAsync { getUserByName("111") }
             .thenApplyAsync {
                 val orders = executors.submit(Callable { getUserOrders(it.name) })
                 val avatar = executors.submit(Callable { getUserAvatar(it.name) })
@@ -45,7 +45,7 @@ internal class TestConcurrent {
     @Test
     fun rxjava() {
         val tasks: BlockingQueue<Runnable> = LinkedBlockingQueue()
-        Observable.fromCallable { getUserById("111") }.flatMap { u ->
+        Observable.fromCallable { getUserByName("111") }.flatMap { u ->
             val avatar = Observable.fromCallable { getUserAvatar(u.name) }.subscribeOn(Schedulers.io())
             val order = Observable.fromCallable { getUserOrders(u.name) }.subscribeOn(Schedulers.io())
             Observable.zip(avatar, order) { t1, t2 -> Pair(t1, t2) }
@@ -63,12 +63,14 @@ internal class TestConcurrent {
     }
 
     @Test
-    fun coroutine(): Unit = runBlocking {
-        val user = getUserByIdSuspended("111")
-        val avatar = async { getUserAvatarSuspended(user.name) }
-        val orders = async { getUserOrdersSuspended(user.name) }
-        println("avatar is ${avatar.await()}")
-        println("orders is ${orders.await()}")
+    fun coroutine(): Unit {
+        runBlocking {
+            val user = getUserByIdSuspended("111")
+            val avatar = async { getUserAvatarSuspended(user.name) }
+            val orders = async { getUserOrdersSuspended(user.name) }
+            println("avatar is ${avatar.await()}")
+            println("orders is ${orders.await()}")
+        }
     }
 
     @Test
