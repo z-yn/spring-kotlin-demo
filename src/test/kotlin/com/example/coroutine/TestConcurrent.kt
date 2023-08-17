@@ -72,9 +72,5 @@ internal class TestConcurrent {
             println("orders is ${orders.await()}")
         }
     }
-
-    @Test
-    fun testOr() {
-        println(0 or Int.MIN_VALUE)
-    }
+    
 }

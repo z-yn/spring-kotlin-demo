@@ -1,19 +1,17 @@
 package com.example.springkotlin
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import jdk.internal.vm.Continuation
+import jdk.internal.vm.ContinuationScope
+import jdk.internal.vm.ContinuationSupport
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-private const val THREAD_NUM = 10_0000
-
 // https://openjdk.org/jeps/444
-class VirtualThreadTest {
-    
-        @Test
+internal class VirtualThreadTest {
+
+    @Test
     fun threadTest() {
         val scheduledExecutor = Executors.newSingleThreadScheduledExecutor()
         val threadStart = System.currentTimeMillis()
@@ -34,7 +32,9 @@ class VirtualThreadTest {
         println("virtual thread executor start @ $virtualThreadStart")
         repeat(THREAD_NUM) {
             newVirtualThreadPerTaskExecutor.submit {
+                if (it == 1) println("task $it @before_sleep: thread is ${Thread.currentThread()}")
                 Thread.sleep(Duration.ofSeconds(1))
+                if (it == 1) println("task $it @after_sleep: thread is ${Thread.currentThread()}")
             }
         }
         newVirtualThreadPerTaskExecutor.close()
@@ -61,21 +61,76 @@ class VirtualThreadTest {
     }
 
     @Test
-    fun coroutineTest() {
-//        val dispatcher = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
-        val coroutineStart = System.currentTimeMillis()
-        runBlocking {
-            println("coroutine start @ $coroutineStart")
-            repeat(THREAD_NUM) {
-                launch {
-                    delay(1000)
-                    println(it)
-                }
-            }
+    fun testContinuation() {
+        val scope = ContinuationScope("myScope")
+        val continuation = Continuation(scope) {
+            println("Continuation running");
+            Continuation.yield(scope);
+            println("Continuation still running");
         }
-        val coroutineEnd = System.currentTimeMillis()
-        println("coroutine end @ $coroutineEnd")
-        println("coroutine cost time ${coroutineEnd - coroutineStart}")
+        while (!continuation.isDone) {
+            continuation.run()
+        }
+    }
+
+    //BaseVirtualThread --sealed VirtualThread, ThreadBuilders.BoundVirtualThread
+    // park()
+    // parkNanos()
+    //unpark()
+
+    // VirtualThread
+
+
+    /*
+   * Virtual thread state and transitions:
+   *
+   *      NEW -> STARTED         // Thread.start
+   *  STARTED -> TERMINATED      // failed to start
+   *  STARTED -> RUNNING         // first run
+   *
+   *  RUNNING -> PARKING         // Thread attempts to park
+   *  PARKING -> PARKED          // cont.yield successful, thread is parked
+   *  PARKING -> PINNED          // cont.yield failed, thread is pinned
+   *
+   *   PARKED -> RUNNABLE        // unpark or interrupted
+   *   PINNED -> RUNNABLE        // unpark or interrupted
+   *
+   * RUNNABLE -> RUNNING         // continue execution
+   *
+   *  RUNNING -> YIELDING        // Thread.yield
+   * YIELDING -> RUNNABLE        // yield successful
+   * YIELDING -> RUNNING         // yield failed
+   *
+   *  RUNNING -> TERMINATED      // done
+   */
+
+    /**
+     *
+     *     //  // scheduler and continuation
+     *    private final Executor scheduler;
+     *     private final Continuation cont;
+     *
+     *      private final Runnable runContinuation;
+     *
+     *     // virtual thread state, accessed by VM
+     *     private volatile int state;
+     *
+     *     // parking permit
+     *     private volatile boolean parkPermit;
+     *
+     *     // carrier thread when mounted, accessed by VM
+     *     private volatile Thread carrierThread;
+     *
+     *     // termination object when joining, created lazily if needed
+     *     private volatile CountDownLatch termination;
+     */
+
+
+    @Test
+    fun testNewVirtualThread() {
+        if (ContinuationSupport.isSupported()) {
+
+        }
     }
 }
 
