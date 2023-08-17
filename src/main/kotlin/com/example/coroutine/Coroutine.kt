@@ -1,7 +1,8 @@
 package com.example.coroutine
 
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.*
-import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -16,17 +17,17 @@ fun getUserByName(name: String): UserData {
     return UserData(UUID.randomUUID().toString(), name)
 }
 
-fun getUserAvatar(userName: String): UserAvatar {
+fun getUserAvatar(userId: String): UserAvatar {
     Thread.sleep(1000)//模仿网络请求
     return UserAvatar("<svg></svg>")
 }
 
-fun getUserOrders(userName: String): List<Int> {
+fun getUserOrders(userId: String): List<Int> {
     Thread.sleep(1000)//模仿网络请求
     return listOf(1, 2, 3)
 }
 
-fun getUserByIdCsp(id: String, continuation: Continuation<Any?>) {
+fun getUserByNameCsp(id: String, continuation: Continuation<Any?>) {
 
 }
 
@@ -37,22 +38,18 @@ fun linear() {
     // 其他业务逻辑 ...
 }
 
-fun <T> callbackStyle(task: () -> T, onSuccess: (T) -> Unit, onFailure: ((Exception) -> Unit)? = null): CountDownLatch {
-    val countDownLatch = CountDownLatch(1)
+fun <T> callbackStyle(task: () -> T, onSuccess: (T) -> Unit, onFailure: ((Exception) -> Unit)? = null) {
     thread {
         try {
             val invoke = task()
             onSuccess(invoke)
-            countDownLatch.countDown()
         } catch (e: Exception) {
             onFailure?.invoke(e)
-            countDownLatch.countDown()
         }
     }
-    return countDownLatch
 }
 
-fun getUserByIdAsync(id: String, onSuccess: (UserData) -> Unit, onFailure: ((Exception) -> Unit)? = null) =
+fun getUserByNameAsync(id: String, onSuccess: (UserData) -> Unit, onFailure: ((Exception) -> Unit)? = null) =
     callbackStyle({ getUserByName(id) }, onSuccess, onFailure)
 
 fun getUserAvatarAsync(id: String, onSuccess: (UserAvatar) -> Unit, onFailure: ((Exception) -> Unit)? = null) =
@@ -78,4 +75,14 @@ suspend fun getUserAvatarSuspended(id: String): UserAvatar = suspendedCall { get
 suspend fun getUserOrdersSuspended(id: String): List<Int> = suspendedCall { getUserOrders(id) }
 
 
-
+fun test() = runBlocking {
+    launch {
+        val user = getUserByName("1111")
+        launch {
+            getUserAvatar(user.id)
+        }
+        launch {
+            getUserOrders(user.id)
+        }
+    }
+}

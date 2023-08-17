@@ -11,15 +11,17 @@ import java.util.concurrent.*
 internal class TestConcurrent {
     @Test
     fun callbackTest() {
-        val countDownLatch = getUserByIdAsync("111", { u ->
-            val countdown1 = getUserOrdersAsync(u.name, {
+        val countDownLatch = CountDownLatch(3)
+        getUserByNameAsync("111", { u ->
+            getUserOrdersAsync(u.name, {
                 println(it)
+                countDownLatch.countDown()
             }) //耗时1s
-            val countdown2 = getUserAvatarAsync(u.name, {
+            getUserAvatarAsync(u.name, {
                 println(it)
+                countDownLatch.countDown()
             }) //耗时1s
-            countdown1.await()
-            countdown2.await()
+            countDownLatch.countDown()
         });
         countDownLatch.await()
     }
@@ -72,5 +74,5 @@ internal class TestConcurrent {
             println("orders is ${orders.await()}")
         }
     }
-    
+
 }

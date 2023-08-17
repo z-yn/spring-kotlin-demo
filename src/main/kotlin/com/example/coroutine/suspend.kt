@@ -11,7 +11,7 @@ suspend fun test(id: String): String {
     return user.id
 }
 
-abstract class BaseContinuationImpl(public val completion: Continuation<Any?>) : Continuation<Any?> {
+abstract class BaseContinuationImpl(private val completion: Continuation<Any?>) : Continuation<Any?> {
     override val context: CoroutineContext = completion.context
     override fun resumeWith(result: Result<Any?>) {
         var current = this
@@ -59,11 +59,11 @@ fun testCsp(id: String, continuation: Continuation<Any?>): Any? {
         else {
             continPass()
         }
-    var res: Any?
+    val res: Any?
     when (nextLevelContinuation.label) {
         0 -> { //没有执行
             println("suspended start")
-            res = getUserByIdCsp(id, continuation);
+            res = getUserByNameCsp(id, continuation);
             nextLevelContinuation.label = 1
             if (res == COROUTINE_SUSPENDED) {
                 return COROUTINE_SUSPENDED
