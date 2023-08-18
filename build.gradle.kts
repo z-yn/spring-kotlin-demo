@@ -46,5 +46,6 @@ tasks.withType<KotlinCompile> {
 }
 
 tasks.withType<Test> {
+    jvmArgs = listOf("--add-exports","java.base/jdk.internal.vm=ALL-UNNAMED")
     useJUnitPlatform()
 }

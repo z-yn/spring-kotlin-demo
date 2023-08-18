@@ -1,8 +1,6 @@
 package com.example.springkotlin
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
 
 internal class KotlinCoroutineTest {
@@ -17,6 +15,11 @@ internal class KotlinCoroutineTest {
                     delay(1000)
                     println(it)
                 }
+            }
+        }
+        with(CoroutineScope(Dispatchers.Main)) {
+            launch {
+
             }
         }
         val coroutineEnd = System.currentTimeMillis()

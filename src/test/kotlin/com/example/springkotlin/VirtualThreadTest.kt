@@ -1,3 +1,4 @@
+@file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE")
 package com.example.springkotlin
 
 import jdk.internal.vm.Continuation
@@ -9,6 +10,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 // https://openjdk.org/jeps/444
+
+
 internal class VirtualThreadTest {
 
     @Test
@@ -47,10 +50,11 @@ internal class VirtualThreadTest {
     fun virtualThreadTest() {
         val virtualThreadStart = System.currentTimeMillis()
         println("virtual thread start @ $virtualThreadStart")
-        val threads = List(THREAD_NUM) {
+        val threads = List(10) {
             Thread.ofVirtual().unstarted {
+                if (1==it) println("before_sleep @ ${Thread.currentThread()}")
                 Thread.sleep(Duration.ofSeconds(1))
-                println(it)
+                if (1==it) println("after_sleep @ ${Thread.currentThread()}")
             }
         }
         threads.forEach { it.start() }
@@ -62,15 +66,16 @@ internal class VirtualThreadTest {
 
     @Test
     fun testContinuation() {
+        println("Continuation  Support: ${ContinuationSupport.isSupported()}")
         val scope = ContinuationScope("myScope")
         val continuation = Continuation(scope) {
             println("Continuation running");
             Continuation.yield(scope);
             println("Continuation still running");
         }
-        while (!continuation.isDone) {
-            continuation.run()
-        }
+        continuation.run()
+        println("resume")
+        continuation.run()
     }
 
     //BaseVirtualThread --sealed VirtualThread, ThreadBuilders.BoundVirtualThread
@@ -125,12 +130,5 @@ internal class VirtualThreadTest {
      *     private volatile CountDownLatch termination;
      */
 
-
-    @Test
-    fun testNewVirtualThread() {
-        if (ContinuationSupport.isSupported()) {
-
-        }
-    }
 }
 
