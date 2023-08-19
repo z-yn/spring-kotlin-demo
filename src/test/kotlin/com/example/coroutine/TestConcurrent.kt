@@ -2,6 +2,8 @@ package com.example.coroutine
 
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -34,6 +36,7 @@ internal class TestConcurrent {
             val orders: List<Int>,
             val avatar: UserAvatar
         )
+        executors.asCoroutineDispatcher()
         CompletableFuture.supplyAsync { getUserByName("111") }
             .thenApplyAsync {
                 val orders = executors.submit(Callable { getUserOrders(it.name) })

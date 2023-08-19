@@ -41,39 +41,29 @@ abstract class BaseContinuationImpl(private val completion: Continuation<Any?>) 
 }
 
 
-fun testCsp(id: String, continuation: Continuation<Any?>): Any? {
-    class continPass : BaseContinuationImpl(continuation) {
+fun testCsp(id: String, cont: Continuation<Any?>): Any? {
+    class  NextCont : BaseContinuationImpl(cont) {
         var result: Any? = null
         var label = 0
-
         override fun invokeSuspend(r: Result<Any?>): Any? {
             result = r;
-            label = label or Int.MIN_VALUE
             return testCsp("", this)
         }
     }
+    val nextCont =
+        if (cont is NextCont) cont else NextCont()
 
-    val nextLevelContinuation =
-        if (continuation is continPass)
-            continuation
-        else {
-            continPass()
-        }
     val res: Any?
-    when (nextLevelContinuation.label) {
+    when (nextCont.label) {
         0 -> { //没有执行
             println("suspended start")
-            res = getUserByNameCsp(id, continuation);
-            nextLevelContinuation.label = 1
+            res = getUserByNameCsp(id, cont);
+            nextCont.label = 1
             if (res == COROUTINE_SUSPENDED) {
                 return COROUTINE_SUSPENDED
             }
         }
-
-        1 -> {
-            res = nextLevelContinuation.result
-        }
-
+        1 -> { res = nextCont.result }
         else -> throw RuntimeException()
     }
     val userData = res as UserData

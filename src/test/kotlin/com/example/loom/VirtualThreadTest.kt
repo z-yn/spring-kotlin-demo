@@ -1,6 +1,7 @@
 @file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE")
-package com.example.springkotlin
+package com.example.loom
 
+import com.example.springkotlin.THREAD_NUM
 import jdk.internal.vm.Continuation
 import jdk.internal.vm.ContinuationScope
 import jdk.internal.vm.ContinuationSupport
