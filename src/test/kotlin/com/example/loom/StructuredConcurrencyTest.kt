@@ -135,8 +135,12 @@ internal class StructuredConcurrencyTest {
                 Subtask.State.FAILED -> exceptions.add(subtask.exception())
             }
         }
-
-        fun max(): Double = taskResults.max()
-        fun min(): Double = taskResults.min()
+        private fun <T> exceptionOrResult(getResult:()->T):T {
+           return if (exceptions.isNotEmpty()) throw Exception()
+                .apply { exceptions.forEach { addSuppressed(it) } }
+            else getResult()
+        }
+        fun max(): Double = exceptionOrResult { taskResults.max() }
+        fun min(): Double = exceptionOrResult { taskResults.min() }
     }
 }
