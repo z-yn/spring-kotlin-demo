@@ -2,8 +2,10 @@ package com.example.coroutine
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
@@ -96,6 +98,50 @@ internal class TestKotlinxCoroutine {
                }
             }
         }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun testSelect() {
+        fun CoroutineScope.fizz() = produce {
+            while (true) { // sends "Fizz" every 500 ms
+                delay(500)
+                send("Fizz")
+            }
+        }
+        fun CoroutineScope.buzz() = produce {
+            while (true) { // sends "Buzz!" every 1000 ms
+                delay(1000)
+                send("Buzz!")
+            }
+        }
+
+       runBlocking {
+           val fizz = produce {
+               while (true) { // sends "Fizz" every 500 ms
+                   delay(500)
+                   send("Fizz")
+               }
+           }
+           val buzz = produce {
+               while (true) { // sends "Buzz!" every 1000 ms
+                   delay(1000)
+                   send("Buzz!")
+               }
+           }
+
+           repeat(7) {
+               select { // <Unit> means that this select expression does not produce any result
+                   fizz.onReceive { value ->  // this is the first select clause
+                       println("fizz -> '$value'")
+                   }
+                   buzz.onReceive { value ->  // this is the second select clause
+                       println("buzz -> '$value'")
+                   }
+               }
+           }
+           coroutineContext.cancelChildren() // cancel fizz & buzz coroutines
+       }
     }
     @OptIn(ObsoleteCoroutinesApi::class)
     @Test

@@ -1,36 +1,34 @@
 package com.example.loom
 
 import org.junit.jupiter.api.Test
-import java.util.concurrent.Callable
+import java.util.concurrent.Executors
 import java.util.concurrent.StructuredTaskScope
 
 internal class ScopedValueTest {
     @Test
     fun testValues() {
-        println("isBound: ${KEY.isBound}")
-        ScopedValue.where(KEY, "token")
+        val scopedValue = ScopedValue.newInstance<String>()
+        println("isBound: ${scopedValue.isBound}")
+        val executor = Executors.newSingleThreadScheduledExecutor()
+        ScopedValue.where(scopedValue, "token")
             .run {
-                if (KEY.isBound) { //bound
-                    println("get ${KEY.get()}")
-                }
+                if (scopedValue.isBound) println("in_top_block ${scopedValue.get()}") // bound,token
                 Thread.ofVirtual().unstarted {
-                    if (KEY.isBound) {//not bound
-                        println("in_virtual get ${KEY.get()}")
-                    }
+                    if (scopedValue.isBound) println("in_virtual ${scopedValue.get()}") //not bound
                 }
-                StructuredTaskScope.ShutdownOnFailure().use {
-                    it.fork {
-                        if (KEY.isBound) { //bound
-                            println("forked_virtual_thread get ${KEY.get()}")
+                executor.submit {
+                    if (scopedValue.isBound) println("in_executor ${scopedValue.get()}") //not bound
+                }
+                ScopedValue.where(scopedValue, "newToken").run {
+                    StructuredTaskScope.ShutdownOnFailure().use {
+                        it.fork {
+                            if (scopedValue.isBound) println("forked_virtual_thread ${scopedValue.get()}") //bound,newToken
                         }
+                        it.join()
                     }
-                    it.join()
                 }
+                if (scopedValue.isBound) println("in_top_block ${scopedValue.get()}") // bound token
             }
     }
 
-    companion object {
-        @JvmStatic
-        private val KEY = ScopedValue.newInstance<String>()
-    }
 }
