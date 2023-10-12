@@ -17,11 +17,6 @@ internal class KotlinCoroutineTest {
                 }
             }
         }
-        with(CoroutineScope(Dispatchers.Main)) {
-            launch {
-
-            }
-        }
         val coroutineEnd = System.currentTimeMillis()
         println("coroutine end @ $coroutineEnd")
         println("coroutine cost time ${coroutineEnd - coroutineStart}")

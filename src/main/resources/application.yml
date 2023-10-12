@@ -1,10 +1,12 @@
 spring:
   r2dbc:
-    url: r2dbc:postgresql://zouyanan:postgres@localhost:5432/demo
+    url: r2dbc:postgresql://localhost:5432/quarkus_test
     pool:
       enabled: true
       initial-size: 5
       max-size: 10
+    username: quarkus_test
+    password: quarkus_test
 logging:
   level:
     org.springframework.r2dbc: DEBUG

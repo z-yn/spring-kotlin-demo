@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 // https://openjdk.org/jeps/444
 
@@ -73,10 +74,16 @@ internal class VirtualThreadTest {
             println("Continuation running");
             Continuation.yield(scope);
             println("Continuation still running");
+            Continuation.yield(scope);
+            println("Continuation finished");
+
         }
-        continuation.run()
-        println("resume")
-        continuation.run()
+
+        val step = AtomicInteger(1)
+        while (!continuation.isDone) {
+            println("run continuation ${step.getAndIncrement()}")
+            continuation.run()
+        }
     }
 
     //BaseVirtualThread --sealed VirtualThread, ThreadBuilders.BoundVirtualThread
